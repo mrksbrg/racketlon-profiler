@@ -46,34 +46,29 @@
 
 (simulate-TE-set 0.5 1)
 
-  (defn simulate-set [prob-win-point set-name]
-    (let [[player1-points player2-points] (simulate-TT-BA-SQ-set prob-win-point)]
-      (println set-name "score" player1-points "-" player2-points)
-      [player1-points player2-points]))
+(defn simulate-match [& args]
+  (let [probabilities (map read-string args)
+        set-names ["TT" "BA" "SQ"]
+        scores (reduce
+                (fn [acc [prob set-name]]
+                  (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
+                    [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
+                [0 0]
+                (map vector probabilities set-names))]
+    (if (> (first scores) (second scores))
+      (println "You won!")
+      (println "You lost."))
+    (println "Match score:" (first scores) "-" (second scores))
+    (- (first scores) (second scores))))
 
-  (defn simulate-match [& args]
-    (let [probabilities (map read-string args)
-          set-names ["TT" "BA" "SQ"]
-          scores (reduce
-                  (fn [acc [prob set-name]]
-                    (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
-                      [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
-                  [0 0]
-                  (map vector probabilities set-names))]
-      (if (> (first scores) (second scores))
-        (println "You won!")
-        (println "You lost."))
-      (println "Match score:" (first scores) "-" (second scores))
-      (- (first scores) (second scores))))
-
-(simulate-match "0.35" "0.7" "0.8" "0.25")
 ; input your point win probabilities per sport
+(simulate-match "0.35" "0.7" "0.8" "0.25")
 
-  (defn simulate-match-distribution [& args]
-    (let [num-matches 1000
-          scores (vec (repeatedly num-matches (partial apply simulate-match args)))]
-      (frequencies scores)))
+(defn simulate-match-distribution [& args]
+  (let [num-matches 1000
+        scores (vec (repeatedly num-matches (partial apply simulate-match args)))]
+    (frequencies scores)))
 
-  (println "Score Distribution:")
-  (doseq [[score count] (sort-by first score-distribution)]
-    (println "Score:" score "Count:" count))
+(println "Score Distribution:")
+(doseq [[score count] (sort-by first score-distribution)]
+  (println "Score:" score "Count:" count))
