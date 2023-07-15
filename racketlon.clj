@@ -29,13 +29,13 @@
         (println "Tight! Full TE: " p1-ppts "-" p2-ppts)
         [p1-ppts p2-ppts])
       ; if player 1 is in the lead, 22 - the difference is their win condition 
-      (if (and (pos? diff-before)
+      (if (and (> diff-before 1)
                (or (>= p1-ppts (- 22 diff-before)) (>= p2-ppts 21)))
         (do
           (println "P1 was in the lead. Score" p1-ppts "-" p2-ppts)
           [p1-ppts p2-ppts])
         ; if player 2 is in the lead, 22 - the absolute value of the difference is their win condition
-        (if (and (neg? diff-before)
+        (if (and (< diff-before -1)
                  (or (>= p1-ppts 21) (>= p2-ppts (- 22 (Math/abs diff-before)))))
           (do
             (println "P2 was in the lead. Score" p1-ppts "-" p2-ppts)
