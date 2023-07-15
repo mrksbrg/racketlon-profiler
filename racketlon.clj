@@ -26,35 +26,38 @@
              (or (>= p1-ppts 21) (>= p2-ppts 21))
              (>= (Math/abs (- p1-ppts p2-ppts)) 2))
       (do
-        (println "Tight! Full TE: " p1-ppts "-" p2-ppts)
+        (println "TE score: " p1-ppts "-" p2-ppts)
         [p1-ppts p2-ppts])
       ; if player 1 is in the lead, 22 - the difference is their win condition 
       (if (and (> diff-before 1)
                (or (>= p1-ppts (- 22 diff-before)) (>= p2-ppts 21)))
         (do
-          (println "P1 was in the lead. Score" p1-ppts "-" p2-ppts)
+          (println "TE score" p1-ppts "-" p2-ppts)
           [p1-ppts p2-ppts])
         ; if player 2 is in the lead, 22 - the absolute value of the difference is their win condition
         (if (and (< diff-before -1)
                  (or (>= p1-ppts 21) (>= p2-ppts (- 22 (Math/abs diff-before)))))
           (do
-            (println "P2 was in the lead. Score" p1-ppts "-" p2-ppts)
+            (println "TE score" p1-ppts "-" p2-ppts)
             [p1-ppts p2-ppts])
           (let [win-point? (win-rally prob-win-point)]
             (recur (if win-point? (inc p1-ppts) p1-ppts)
                    (if (not win-point?) (inc p2-ppts) p2-ppts))))))))
 
-(simulate-TE-set 0.5 1)
-
 (defn simulate-match [& args]
   (let [probabilities (map read-string args)
         set-names ["TT" "BA" "SQ"]
+        ; simulate TT, BA, and SQ sets and sum up the points
         scores (reduce
                 (fn [acc [prob set-name]]
                   (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
                     [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
                 [0 0]
                 (map vector probabilities set-names))]
+    ; simulate a TE set if needed
+    (if (<= (Math/abs (- (first scores) (second scores))) 21)
+      (simulate-TE-set (read-string (nth args 3)) (- (first scores) (second scores)))
+      (println "No TE needed.")) 
     (if (> (first scores) (second scores))
       (println "You won!")
       (println "You lost."))
@@ -63,6 +66,9 @@
 
 ; input your point win probabilities per sport
 (simulate-match "0.35" "0.7" "0.8" "0.25")
+(simulate-match "0.8" "0.8" "0.8" "0.7")
+(simulate-match "0.2" "0.3" "0.6" "0.2")
+
 
 (defn simulate-match-distribution [& args]
   (let [num-matches 1000
