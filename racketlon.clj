@@ -71,9 +71,13 @@
 
 
 (defn simulate-match-distribution [& args]
-  (let [num-matches 1000
-        scores (vec (repeatedly num-matches (partial apply simulate-match args)))]
-    (frequencies scores)))
+  (let [num-matches 10000
+        scores (vec (repeatedly num-matches (partial apply simulate-match args)))
+        frequency-map (frequencies scores)
+        sorted-frequency (sort-by (comp - second) frequency-map)]
+    sorted-frequency))
+
+(simulate-match-distribution "0.5" "0.5" "0.5" "0.5")
 
 (println "Score Distribution:")
 (doseq [[score count] (sort-by first score-distribution)]
