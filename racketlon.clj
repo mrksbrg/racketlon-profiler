@@ -47,10 +47,11 @@
             (recur (if win-point? (inc p1-ppts) p1-ppts)
                    (if (not win-point?) (inc p2-ppts) p2-ppts))))))))
 
-(defn simulate-match
+(defn simulate-match-old
   [& args]
   (let [probabilities (map read-string args)
         set-names ["TT" "BA" "SQ"]
+        TE-prob (read-string (nth args 3))
         ; simulate TT, BA, and SQ sets and sum up the points
         scores (reduce
                 (fn [acc [prob set-name]]
@@ -58,31 +59,67 @@
                     [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
                 [0 0]
                 (map vector probabilities set-names))]
-    
+
     ; simulate a TE set if needed
     (if (<= (Math/abs (- (first scores) (second scores))) 21)
-      (simulate-TE-set (read-string (nth args 3)) (- (first scores) (second scores)))
-      (println "No TE needed."))
+      (simulate-TE-set TE-prob (- (first scores) (second scores)))
+    (println "No TE needed."))
     
-    ; simulate a gummiarm point if needed
+   ; simulate a gummiarm point if needed
     (if (= (first scores) (second scores))
-      (let [winner (simulate-gummiarm-tiebreak)]
-        (let [new-scores (if (= winner 1)
-                           [(inc p1-score) p2-score]
-                           [p1-score (inc p2-score)])]
-          (recur new-scores)))
-      (println "Match score:" p1-score "-" p2-score))
+      (if (win-rally TE-prob)
+        (do
+          (println "You won the gummiarm tiebreak!"))
+        (do
+          (println "You lost the gummiarm tiebreak!"))))
 
     (if (> (first scores) (second scores))
-      (println "You won!")
-      (println "You lost."))
+      (println "You won the match!")
+      (println "You lost the match."))
     (println "Match score:" (first scores) "-" (second scores))
     (- (first scores) (second scores))))
+
+(defn simulate-match
+  [& args]
+  (let [probabilities (map read-string args)
+        set-names ["TT" "BA" "SQ"]
+        TE-prob (read-string (nth args 3))
+        ; simulate TT, BA, and SQ sets and sum up the points
+        [p1-score p2-score] (reduce
+                             (fn [[p1 p2] [prob set-name]]
+                               (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
+                                 [(+ p1 p1-ppts) (+ p2 p2-ppts)]))
+                             [0 0]
+                             (map vector probabilities set-names))]
+
+    ; simulate a TE set if needed
+    (if (<= (Math/abs (- p1-score p2-score)) 21)
+      (simulate-TE-set TE-prob (- p1-score p2-score))
+      (println "No TE needed."))
+
+    ; simulate a gummiarm point if needed
+    (if (= p1-score p2-score)
+      (let [gummiwinner (if (win-rally TE-prob) 1 2)] ; Bind gummiwinner variable based on the result of win-rally
+        (let [new-p1-score (if (= gummiwinner 1) (inc p1-score) p1-score)
+              new-p2-score (if (= gummiwinner 2) (inc p2-score) p2-score)]
+          (println "- Gummiarm tiebreak played.")
+          (println "Match score:" new-p1-score "-" new-p2-score)
+          (println (if (> new-p1-score new-p2-score) "You won!" "You lost!"))
+          (let [final-difference (- new-p1-score new-p2-score)] 
+            final-difference)))
+
+      (do
+        (println "Match score:" p1-score "-" p2-score)
+        (println (if (> p1-score p2-score) "You won!" "You lost!"))
+        (let [final-difference (- p1-score p2-score)] 
+          final-difference)))))
+
 
 ; input your point win probabilities per sport
 (simulate-match "0.35" "0.7" "0.8" "0.25")
 (simulate-match "0.8" "0.8" "0.8" "0.7")
 (simulate-match "0.5" "0.5" "0.5" "0.5")
+
 
 (defn simulate-match-distribution
   [& args]
