@@ -99,27 +99,22 @@
 
     ; simulate a gummiarm point if needed
     (if (= p1-score p2-score)
-      (let [gummiwinner (if (win-rally TE-prob) 1 2)] ; Bind gummiwinner variable based on the result of win-rally
+      (let [gummiwinner (if (win-rally TE-prob) 1 2)]
         (let [new-p1-score (if (= gummiwinner 1) (inc p1-score) p1-score)
               new-p2-score (if (= gummiwinner 2) (inc p2-score) p2-score)]
           (println "- Gummiarm tiebreak played.")
           (println "Match score:" new-p1-score "-" new-p2-score)
           (println (if (> new-p1-score new-p2-score) "You won!" "You lost!"))
-          (let [final-difference (- new-p1-score new-p2-score)] 
-            final-difference)))
-
+          (- new-p1-score new-p2-score)))
       (do
         (println "Match score:" p1-score "-" p2-score)
         (println (if (> p1-score p2-score) "You won!" "You lost!"))
-        (let [final-difference (- p1-score p2-score)] 
-          final-difference)))))
-
+        (- p1-score p2-score)))))
 
 ; input your point win probabilities per sport
 (simulate-match "0.35" "0.7" "0.8" "0.25")
 (simulate-match "0.8" "0.8" "0.8" "0.7")
 (simulate-match "0.5" "0.5" "0.5" "0.5")
-
 
 (defn simulate-match-distribution
   [& args]
