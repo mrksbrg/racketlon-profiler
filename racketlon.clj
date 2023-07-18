@@ -58,15 +58,21 @@
                     [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
                 [0 0]
                 (map vector probabilities set-names))]
+    
     ; simulate a TE set if needed
     (if (<= (Math/abs (- (first scores) (second scores))) 21)
       (simulate-TE-set (read-string (nth args 3)) (- (first scores) (second scores)))
       (println "No TE needed."))
+    
     ; simulate a gummiarm point if needed
-    ;(if (= (first scores) (second scores))
-    ;  (if (win-rally (read-string (nth args 3)))
-    ;  (println "P1 won by gummi!"))
-    ;  (println "P2 won by gummi"))
+    (if (= (first scores) (second scores))
+      (let [winner (simulate-gummiarm-tiebreak)]
+        (let [new-scores (if (= winner 1)
+                           [(inc p1-score) p2-score]
+                           [p1-score (inc p2-score)])]
+          (recur new-scores)))
+      (println "Match score:" p1-score "-" p2-score))
+
     (if (> (first scores) (second scores))
       (println "You won!")
       (println "You lost."))
