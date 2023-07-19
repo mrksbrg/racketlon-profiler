@@ -47,38 +47,6 @@
             (recur (if win-point? (inc p1-ppts) p1-ppts)
                    (if (not win-point?) (inc p2-ppts) p2-ppts))))))))
 
-(defn simulate-match-old
-  [& args]
-  (let [probabilities (map read-string args)
-        set-names ["TT" "BA" "SQ"]
-        TE-prob (read-string (nth args 3))
-        ; simulate TT, BA, and SQ sets and sum up the points
-        scores (reduce
-                (fn [acc [prob set-name]]
-                  (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
-                    [(+ (first acc) p1-ppts) (+ (second acc) p2-ppts)]))
-                [0 0]
-                (map vector probabilities set-names))]
-
-    ; simulate a TE set if needed
-    (if (<= (Math/abs (- (first scores) (second scores))) 21)
-      (simulate-TE-set TE-prob (- (first scores) (second scores)))
-    (println "No TE needed."))
-    
-   ; simulate a gummiarm point if needed
-    (if (= (first scores) (second scores))
-      (if (win-rally TE-prob)
-        (do
-          (println "You won the gummiarm tiebreak!"))
-        (do
-          (println "You lost the gummiarm tiebreak!"))))
-
-    (if (> (first scores) (second scores))
-      (println "You won the match!")
-      (println "You lost the match."))
-    (println "Match score:" (first scores) "-" (second scores))
-    (- (first scores) (second scores))))
-
 (defn simulate-match
   [& args]
   (let [probabilities (map read-string args)
@@ -104,11 +72,10 @@
               new-p2-score (if (= gummiwinner 2) (inc p2-score) p2-score)]
           (println "- Gummiarm tiebreak played.")
           (println "Match score:" new-p1-score "-" new-p2-score)
-          (println (if (> new-p1-score new-p2-score) "You won!" "You lost!"))
           (- new-p1-score new-p2-score)))
+      ; no gummiarm point, just sum up the set scores
       (do
         (println "Match score:" p1-score "-" p2-score)
-        (println (if (> p1-score p2-score) "You won!" "You lost!"))
         (- p1-score p2-score)))))
 
 ; input your point win probabilities per sport
@@ -116,9 +83,17 @@
 (simulate-match "0.8" "0.8" "0.8" "0.7")
 (simulate-match "0.5" "0.5" "0.5" "0.5")
 
+(defn test-profile
+  ; test a single racketlon profile
+  [TT-prob BA-prob SQ-prob TE-prob]
+  (simulate-match TT-prob BA-prob SQ-prob TE-prob)
+  )
+
+(test-profile "0.35" "0.7" "0.8" "0.25" false)
+
 (defn simulate-match-distribution
   [& args]
-  (let [num-matches 1000000
+  (let [num-matches 10000
         scores (vec (repeatedly num-matches (partial apply simulate-match args)))
         frequency-map (frequencies scores)
         sorted-frequency (sort-by (comp - second) frequency-map)]
