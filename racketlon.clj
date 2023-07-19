@@ -1,4 +1,5 @@
-(ns racketlon)
+(ns racketlon
+  (:require [racketlon.constants :as constants]))
 
 (defn win-rally
   [prob]
@@ -100,3 +101,4 @@
           (nth sorted-differences middle)))))
 
 (test-profile "0.35" "0.7" "0.8" "0.25")
+
