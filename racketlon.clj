@@ -87,7 +87,7 @@
   ; test a single racketlon profile
   [TT-prob BA-prob SQ-prob TE-prob]
   ; call simulate-match nbr-matches times and sum up the differences
-  (let [nbr-matches 1
+  (let [nbr-matches 1000
         differences (vec (repeatedly nbr-matches
                                      #(simulate-match TT-prob BA-prob SQ-prob TE-prob)))]
     ; sort the differences and return the median
@@ -100,15 +100,3 @@
           (nth sorted-differences middle)))))
 
 (test-profile "0.35" "0.7" "0.8" "0.25")
-
-(defn simulate-match-distribution
-  [& args]
-  (let [num-matches 1000
-        scores (vec (repeatedly num-matches (partial apply simulate-match args)))
-        frequency-map (frequencies scores)
-        sorted-frequency (sort-by (comp - second) frequency-map)]
-    sorted-frequency))
-
-(simulate-match-distribution "0.35" "0.7" "0.8" "0.25")
-(simulate-match-distribution "0.5" "0.5" "0.5" "0.5")
-
