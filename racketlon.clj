@@ -1,7 +1,7 @@
 (ns racketlon
   (:require [racketlon-constants :as constants]))
 
-(defn win-rally
+(defn win-rally 
   [prob]
   (< (rand) prob))
 
@@ -84,8 +84,8 @@
 (simulate-match "0.8" "0.8" "0.8" "0.7")
 (simulate-match "0.5" "0.5" "0.5" "0.5")
 
-(defn test-profile
-  ; test a single racketlon profile
+(defn calculate-median-score
+  ; simulate 1,000 matches and return the median score
   [TT-prob BA-prob SQ-prob TE-prob]
   ; call simulate-match nbr-matches times and sum up the differences
   (let [nbr-matches 1000
@@ -100,5 +100,76 @@
              2)
           (nth sorted-differences middle)))))
 
-(test-profile "0.35" "0.7" "0.8" "0.25")
+(calculate-median-score "0.35" "0.7" "0.8" "0.25")
 
+(defn calculate-player1-win-percentages
+  ; calculate win percentages for player 1 when playing against player 2
+  [player1-profile player2-profile]
+  (let [player-diffs (map - player1-profile player2-profile)]
+    (convert-diff-to-percentage player-diffs)))
+
+(defn convert-diff-to-percentage 
+  ; convert the differences in rating to percentages
+  [differences] 
+  (let [transform-first (cond
+                          (= (nth differences 0) -4) (- 1 racketlon-constants/TT-substantial)
+                          (= (nth differences 0) -3) (- 1 racketlon-constants/TT-major)
+                          (= (nth differences 0) -2) (- 1 racketlon-constants/TT-minor)
+                          (= (nth differences 0) -1) (- 1 racketlon-constants/TT-marginal)
+                          (= (nth differences 0) 0) 0.5
+                          (= (nth differences 0) 1) racketlon-constants/TT-marginal
+                          (= (nth differences 0) 2) racketlon-constants/TT-minor
+                          (= (nth differences 0) 3) racketlon-constants/TT-major
+                          (= (nth differences 0) 4) racketlon-constants/TT-substantial
+                          :else :unknown)
+
+        transform-second (cond
+                           (= (nth differences 1) -4) (- 1 racketlon-constants/BA-substantial)
+                           (= (nth differences 1) -3) (- 1 racketlon-constants/BA-major)
+                           (= (nth differences 1) -2) (- 1 racketlon-constants/BA-minor)
+                           (= (nth differences 1) -1) (- 1 racketlon-constants/BA-marginal)
+                           (= (nth differences 1) 0) 0.5
+                           (= (nth differences 1) 1) racketlon-constants/BA-marginal
+                           (= (nth differences 1) 2) racketlon-constants/BA-minor
+                           (= (nth differences 1) 3) racketlon-constants/BA-major
+                           (= (nth differences 1) 4) racketlon-constants/BA-substantial
+                           :else :unknown)
+
+        transform-third (cond
+                          (= (nth differences 2) -4) (- 1 racketlon-constants/SQ-substantial)
+                          (= (nth differences 2) -3) (- 1 racketlon-constants/SQ-major)
+                          (= (nth differences 2) -2) (- 1 racketlon-constants/SQ-minor)
+                          (= (nth differences 2) -1) (- 1 racketlon-constants/SQ-marginal)
+                          (= (nth differences 2) 0) 0.5
+                          (= (nth differences 2) 1) racketlon-constants/SQ-marginal
+                          (= (nth differences 2) 2) racketlon-constants/SQ-minor
+                          (= (nth differences 2) 3) racketlon-constants/SQ-major
+                          (= (nth differences 2) 4) racketlon-constants/SQ-substantial
+                          :else :unknown)
+
+        transform-fourth (cond
+                           (= (nth differences 3) -4) (- 1 racketlon-constants/TE-substantial)
+                           (= (nth differences 3) -3) (- 1 racketlon-constants/TE-major)
+                           (= (nth differences 3) -2) (- 1 racketlon-constants/TE-minor)
+                           (= (nth differences 3) -1) (- 1 racketlon-constants/TE-marginal)
+                           (= (nth differences 3) 0) 0.5
+                           (= (nth differences 3) 1) racketlon-constants/TE-marginal
+                           (= (nth differences 3) 2) racketlon-constants/TE-minor
+                           (= (nth differences 3) 3) racketlon-constants/TE-major
+                           (= (nth differences 3) 4) racketlon-constants/TE-substantial
+                           :else :unknown)]
+
+    [transform-first transform-second transform-third transform-fourth]))
+
+(def player-markus [2 4 5 1])
+(def player-niklas [5 3 3 4])
+
+(calculate-player1-win-percentages player-markus player-niklas)
+
+(def markus-niklas (calculate-player1-win-percentages player-markus player-niklas))
+(def markus-TT (str (first markus-niklas)))
+(def markus-BA (str (second markus-niklas)))
+(def markus-SQ (str (nth markus-niklas 2)))
+(def markus-TE (str (nth markus-niklas 3)))
+
+(calculate-median-score markus-TT markus-BA markus-SQ markus-TE)
