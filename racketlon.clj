@@ -1,5 +1,5 @@
 (ns racketlon
-  (:require [racketlon.constants :as constants]))
+  (:require [racketlon-constants :as constants]))
 
 (defn win-rally
   [prob]
