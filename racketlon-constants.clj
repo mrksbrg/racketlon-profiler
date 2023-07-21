@@ -1,6 +1,6 @@
 ; racketlon-constants.clj
 
-(ns racketlon.constants)
+(ns racketlon-constants)
 
 ; LOSERS POINTS / WINNERS PERCENTAGES ACCORDING TO "RACKET COUSINS"
 ; MARGINAL, MINOR, MAJOR, SUBSTANTIAL
