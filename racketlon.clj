@@ -102,12 +102,6 @@
 
 (calculate-median-score "0.35" "0.7" "0.8" "0.25")
 
-(defn calculate-player1-win-percentages
-  ; calculate win percentages for player 1 when playing against player 2
-  [player1-profile player2-profile]
-  (let [player-diffs (map - player1-profile player2-profile)]
-    (convert-diff-to-percentage player-diffs)))
-
 (defn convert-diff-to-percentage 
   ; convert the differences in rating to percentages
   [differences] 
@@ -160,6 +154,12 @@
                            :else :unknown)]
 
     [transform-first transform-second transform-third transform-fourth]))
+
+(defn calculate-player1-win-percentages
+  ; calculate win percentages for player 1 when playing against player 2
+  [player1-profile player2-profile]
+  (let [player-diffs (map - player1-profile player2-profile)]
+    (convert-diff-to-percentage player-diffs)))
 
 (def player-markus [2 4 5 1])
 (def player-niklas [5 3 3 4])
