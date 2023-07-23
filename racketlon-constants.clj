@@ -2,6 +2,27 @@
 
 (ns racketlon-constants)
 
+; MODEL RACKETLON PLAYERS' PROFILES AS VECTORS OF 4 INTEGERS BETWEEN 1 AND 5
+; THE INTEGERS REPRESENT THE PLAYERS' RATING IN THE FOUR SPORTS, I.E.,
+; TABLE TENNIS, BADMINTON, SQUASH, AND TENNIS. HIGHER NUMBER MEANS 
+; A HIGHER RATING.
+;
+; ONE WAY TO SELECT A RATING IS TO LOOK AT THE OVERALL WIN PERCENTAGE OVER 
+; VERY MANY MATCHES. AS A RULE OF THUMB, THE FOLLOWING FRACTIONS OF WON RALLIES
+; CAN BE USED:
+; 1: <= 30%, 2: 30-50%, 3: 50-60%, 4: 60-75%, 5: >=75%
+
+(defn generate-combinations
+  ; generate the 625 different player profiles that exist in racketlon
+  []
+  (for [i (range 1 6)
+        j (range 1 6)
+        k (range 1 6)
+        l (range 1 6)]
+    [i j k l]))
+
+(def all_combinations (generate-combinations))
+
 ; LOSERS POINTS / WINNERS PERCENTAGES ACCORDING TO "RACKET COUSINS"
 ; MARGINAL, MINOR, MAJOR, SUBSTANTIAL
 ; TT: 13.1 / 0.6158, 7.6 / 0.7343, 4.4 / 0.8268, 4.0 / 0.84
