@@ -50,10 +50,10 @@
 
 (defn simulate-match
   [& args]
-  (let [probabilities (map read-string args)
+  (let [probabilities (map read-string args) ; Convert probability strings to integers
         set-names ["TT" "BA" "SQ"]
         TE-prob (read-string (nth args 3))
-        ; simulate TT, BA, and SQ sets and sum up the points
+          ; simulate TT, BA, and SQ sets and sum up the points
         [p1-score p2-score] (reduce
                              (fn [[p1 p2] [prob set-name]]
                                (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
@@ -78,6 +78,25 @@
       (do
         (println "Match score:" p1-score "-" p2-score)
         (- p1-score p2-score)))))
+
+(defn find-best-worst-opponent-profile
+  [arg-TT arg-BA arg-SQ arg-TE]
+   (let [numbers (map #(Integer/parseInt %) [arg-TT arg-BA arg-SQ arg-TE])]
+     (println "You are playing like this:" numbers)
+
+     ; sum up the skill points you have
+
+     ; create all possible opponent profiles
+
+     ; simulate matches against all of them
+     (calculate-player1-win-percentages numbers (nth racketlon-constants/all_combinations 624))
+
+     ; identify the largest and smallest median differences
+
+     ; print the results
+     ))
+
+(find-best-worst-opponent-profile "2" "4" "5" "1")
 
 ; input your point win probabilities per sport
 (simulate-match "0.35" "0.7" "0.8" "0.25")
@@ -173,3 +192,5 @@
 (def markus-TE (str (nth markus-niklas 3)))
 
 (calculate-median-score markus-TT markus-BA markus-SQ markus-TE)
+
+(println (nth racketlon-constants/all_combinations 432)))
