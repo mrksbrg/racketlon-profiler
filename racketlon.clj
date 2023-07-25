@@ -81,15 +81,15 @@
 
 (defn find-best-worst-opponent-profile
   [arg-TT arg-BA arg-SQ arg-TE]
-   (let [numbers (map #(Integer/parseInt %) [arg-TT arg-BA arg-SQ arg-TE])]
-     (println "You are playing like this:" numbers)
+   (let [ratings (map #(Integer/parseInt %) [arg-TT arg-BA arg-SQ arg-TE])
+         total-strength (reduce + ratings)] ; sum up the skill points you have
 
-     ; sum up the skill points you have
+     (println "You are playing like this:" ratings " with a total strength of " total-strength)
 
      ; create all possible opponent profiles
 
      ; simulate matches against all of them
-     (calculate-player1-win-percentages numbers (nth racketlon-constants/all_combinations 624))
+     (calculate-player1-win-percentages ratings (nth racketlon-constants/all_combinations 624))
 
      ; identify the largest and smallest median differences
 
