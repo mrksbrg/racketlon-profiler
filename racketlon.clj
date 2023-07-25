@@ -193,4 +193,4 @@
 
 (calculate-median-score markus-TT markus-BA markus-SQ markus-TE)
 
-(println (nth racketlon-constants/all_combinations 432)))
+(println (nth racketlon-constants/all_combinations 432))
