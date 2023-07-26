@@ -3,42 +3,6 @@
 
 ; (java.lang.System/getProperty "java.class.path")
 
-;; COMBINATORICS
-;; by Mark Engelberg (mark.engelberg@gmail.com)
-;; Last updated - October 24, 2011
-
-(defn- index-combinations
-  [n cnt]
-  (lazy-seq
-   (let [c (vec (cons nil (for [j (range 1 (inc n))] (+ j cnt (- (inc n)))))),
-         iter-comb
-         (fn iter-comb [c j]
-           (if (> j n) nil
-               (let [c (assoc c j (dec (c j)))]
-                 (if (< (c j) j) [c (inc j)]
-                     (loop [c c, j j]
-                       (if (= j 1) [c j]
-                           (recur (assoc c (dec j) (dec (c j))) (dec j)))))))),
-         step
-         (fn step [c j]
-           (cons (rseq (subvec c 1 (inc n)))
-                 (lazy-seq (let [next-step (iter-comb c j)]
-                             (when next-step (step (next-step 0) (next-step 1)))))))]
-     (step c 1))))
-
-(defn combinations
-  "All the unique ways of taking n different elements from items"
-  [items n]
-  (let [v-items (vec (reverse items))]
-    (if (zero? n) (list ())
-        (let [cnt (count items)]
-          (cond (> n cnt) nil
-                (= n cnt) (list (seq items))
-                :else
-                (map #(map v-items %) (index-combinations n cnt)))))))
-
-(combinations [1 2 3] 2)
-
 (defn win-rally 
   [prob]
   (< (rand) prob))
@@ -117,26 +81,32 @@
         (println "Match score:" p1-score "-" p2-score)
         (- p1-score p2-score)))))
 
+(defn sum-to-n?
+  ; predicate function to check if the sum of elements is equal to n
+  [n combination]
+  (= n (apply + combination)))
+
+(defn profiles-summing-to-n
+  ; among the 625 possible player profiles, filter out the ones that sum up to n
+  [n]
+  (filter #(sum-to-n? n %) racketlon-constants/all_combinations))
+
 (defn find-best-worst-opponent-profile
   [arg-TT arg-BA arg-SQ arg-TE]
    (let [ratings (map #(Integer/parseInt %) [arg-TT arg-BA arg-SQ arg-TE])
          total-strength (reduce + ratings)] ; sum up the skill points you have
+     (println "You are playing like this:" ratings "with a total strength of" total-strength)
 
-     (println "You are playing like this:" ratings " with a total strength of " total-strength)
-
-     ; create all possible opponent profiles
-     (let [profs (combinations [1 2 3 4 5] 4)]
-       (println "Total number of possible player profiles:" profs)
+     ; find all possible opponent profiles 
+     (let [possible-opponents (combinations-summing-to-n total-strength)]
+       (println "Number of player profiles matching your strength:" (count possible-opponents)))
 
      ; simulate matches against all of them
-       (calculate-player1-win-percentages ratings (nth racketlon-constants/all_combinations 624))
 
      ; identify the largest and smallest median differences
 
      ; print the results
-       (println "Here are the results!")
-
-     )))
+     (println "Here are the results!")))
 
 (find-best-worst-opponent-profile "2" "4" "5" "1")
 
