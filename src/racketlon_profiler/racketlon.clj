@@ -125,14 +125,18 @@
      (println "You are playing like this:" ratings " with a total strength of " total-strength)
 
      ; create all possible opponent profiles
+     (let [profs (combinations [1 2 3 4 5] 4)]
+       (println "Total number of possible player profiles:" profs)
 
      ; simulate matches against all of them
-     (calculate-player1-win-percentages ratings (nth racketlon-constants/all_combinations 624))
+       (calculate-player1-win-percentages ratings (nth racketlon-constants/all_combinations 624))
 
      ; identify the largest and smallest median differences
 
      ; print the results
-     ))
+       (println "Here are the results!")
+
+     )))
 
 (find-best-worst-opponent-profile "2" "4" "5" "1")
 
