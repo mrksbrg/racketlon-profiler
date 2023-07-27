@@ -3,7 +3,8 @@
 
 ; (java.lang.System/getProperty "java.class.path")
 
-(defn win-rally 
+(defn win-rally
+  ; truthy if random value is smaller than prob
   [prob]
   (< (rand) prob))
 
@@ -51,11 +52,11 @@
                    (if (not win-point?) (inc p2-ppts) p2-ppts))))))))
 
 (defn simulate-match
-  [& args]
-  (let [probabilities (map read-string args) ; Convert probability strings to integers
-        set-names ["TT" "BA" "SQ"]
-        TE-prob (read-string (nth args 3))
-          ; simulate TT, BA, and SQ sets and sum up the points
+  [probabilities]
+;(println "simulate-match:"probabilities)
+  (let [set-names ["TT" "BA" "SQ"]
+        TE-prob (nth probabilities 3)
+        ; simulate TT, BA, and SQ sets and sum up the points
         [p1-score p2-score] (reduce
                              (fn [[p1 p2] [prob set-name]]
                                (let [[p1-ppts p2-ppts] (simulate-TT-BA-SQ-set prob set-name)]
@@ -81,6 +82,8 @@
         (println "Match score:" p1-score "-" p2-score)
         (- p1-score p2-score)))))
 
+(simulate-match [0.35 0.7 0.8 0.2])
+
 (defn sum-to-n?
   ; predicate function to check if the sum of elements is equal to n
   [n combination]
@@ -92,46 +95,51 @@
   (filter #(sum-to-n? n %) racketlon-constants/all_combinations))
 
 (defn find-best-worst-opponent-profile
-  [arg-TT arg-BA arg-SQ arg-TE]
-   (let [ratings (map #(Integer/parseInt %) [arg-TT arg-BA arg-SQ arg-TE])
-         total-strength (reduce + ratings)] ; sum up the skill points you have
-     (println "You are playing like this:" ratings "with a total strength of" total-strength)
+  [ratings]
+  (let [total-strength (reduce + ratings)] ; sum up the skill points you have
+    (println "You are playing like this:" ratings "with a total strength of" total-strength)
 
      ; find all possible opponent profiles 
-     (let [possible-opponents (combinations-summing-to-n total-strength)]
-       (println "Number of player profiles matching your strength:" (count possible-opponents)))
+    (let [possible-opponents (combinations-summing-to-n total-strength)]
+      (println "Number of player profiles matching your strength:" (count possible-opponents))
+      ; calculate win rally percentages against them  
+      (let [percentages (map #(calculate-player1-win-percentages ratings %) possible-opponents)]
+        (println "List of percentages vectors:" percentages)
+        ; call calculate-median-score for each entry in possible-opponents and store the results
+        (let [median-scores (doall (map #(hash-map :opponent-profile % :median-score (calculate-median-score %)) percentages))]
+          (println "Nbr median scores:" (count median-scores))
+          (println "Median scores with opponent profiles:" median-scores)
 
-     ; simulate matches against all of them
+           ; identify the 5 best and 5 worst median scores
+          (let [sorted-median-scores (sort-by :median-score median-scores)]
+            (println "Top 5 best opponent profiles:")
+            (doseq [entry (take-last 5 sorted-median-scores)]
+              (println "Score:" (:median-score entry) "Profile:" (:opponent-profile entry) ))
 
-     ; identify the largest and smallest median differences
+            (println "Top 5 worst opponent profiles:")
+            (doseq [entry (take 5 sorted-median-scores)]
+              (println "Score:" (:median-score entry) "Profile:" (:opponent-profile entry)))))))))
 
-     ; print the results
-     (println "Here are the results!")))
-
-(find-best-worst-opponent-profile "2" "4" "5" "1")
-
-; input your point win probabilities per sport
-(simulate-match "0.35" "0.7" "0.8" "0.25")
-(simulate-match "0.8" "0.8" "0.8" "0.7")
-(simulate-match "0.5" "0.5" "0.5" "0.5")
+(find-best-worst-opponent-profile [2 4 5 1])
 
 (defn calculate-median-score
-  ; simulate 1,000 matches and return the median score
-  [TT-prob BA-prob SQ-prob TE-prob]
+  ; simulate 100 matches and return the median score
+  [probabilities]
+  (println "calculate-median-score:" probabilities)
   ; call simulate-match nbr-matches times and sum up the differences
-  (let [nbr-matches 1000
+  (let [nbr-matches 100
         differences (vec (repeatedly nbr-matches
-                                     #(simulate-match TT-prob BA-prob SQ-prob TE-prob)))]
+                                    #(simulate-match probabilities)))]
     ; sort the differences and return the median
     (let [sorted-differences (sort differences)
-            middle (quot (count sorted-differences) 2)]
-        (if (even? (count sorted-differences))
-          (/ (+ (nth sorted-differences middle)
-                (nth sorted-differences (dec middle)))
-             2)
-          (nth sorted-differences middle)))))
+          middle (quot (count sorted-differences) 2)]
+      (if (even? (count sorted-differences))
+        (/ (+ (nth sorted-differences middle)
+              (nth sorted-differences (dec middle)))
+           2)
+        (nth sorted-differences middle)))))
 
-(calculate-median-score "0.35" "0.7" "0.8" "0.25")
+(calculate-median-score [0.35 0.7 0.8 0.25])
 
 (defn convert-diff-to-percentage 
   ; convert the differences in rating to percentages
@@ -186,6 +194,59 @@
 
     [transform-first transform-second transform-third transform-fourth]))
 
+(defn convert-probabilities-to-diff
+  "Convert the probabilities to differences in player profile."
+  [probabilities]
+  (let [transform-first (cond
+                          (>= (nth probabilities 0) (- 1 racketlon-constants/TT-substantial)) 4
+                          (>= (nth probabilities 0) (- 1 racketlon-constants/TT-major)) 3
+                          (>= (nth probabilities 0) (- 1 racketlon-constants/TT-minor)) 2
+                          (>= (nth probabilities 0) (- 1 racketlon-constants/TT-marginal)) 1
+                          (= (nth probabilities 0) 0.5) 0
+                          (< (nth probabilities 0) racketlon-constants/TT-marginal) -1
+                          (< (nth probabilities 0) racketlon-constants/TT-minor) -2
+                          (< (nth probabilities 0) racketlon-constants/TT-major) -3
+                          (< (nth probabilities 0) racketlon-constants/TT-substantial) -4
+                          :else :unknown)
+
+        transform-second (cond
+                           (>= (nth probabilities 1) (- 1 racketlon-constants/BA-substantial)) 4
+                           (>= (nth probabilities 1) (- 1 racketlon-constants/BA-major)) 3
+                           (>= (nth probabilities 1) (- 1 racketlon-constants/BA-minor)) 2
+                           (>= (nth probabilities 1) (- 1 racketlon-constants/BA-marginal)) 1
+                           (= (nth probabilities 1) 0.5) 0
+                           (< (nth probabilities 1) racketlon-constants/BA-marginal) -1
+                           (< (nth probabilities 1) racketlon-constants/BA-minor) -2
+                           (< (nth probabilities 1) racketlon-constants/BA-major) -3
+                           (< (nth probabilities 1) racketlon-constants/BA-substantial) -4
+                           :else :unknown)
+
+        transform-third (cond
+                          (>= (nth probabilities 2) (- 1 racketlon-constants/SQ-substantial)) 4
+                          (>= (nth probabilities 2) (- 1 racketlon-constants/SQ-major)) 3
+                          (>= (nth probabilities 2) (- 1 racketlon-constants/SQ-minor)) 2
+                          (>= (nth probabilities 2) (- 1 racketlon-constants/SQ-marginal)) 1
+                          (= (nth probabilities 2) 0.5) 0
+                          (< (nth probabilities 2) racketlon-constants/SQ-marginal) -1
+                          (< (nth probabilities 2) racketlon-constants/SQ-minor) -2
+                          (< (nth probabilities 2) racketlon-constants/SQ-major) -3
+                          (< (nth probabilities 2) racketlon-constants/SQ-substantial) -4
+                          :else :unknown)
+
+        transform-fourth (cond
+                           (>= (nth probabilities 3) (- 1 racketlon-constants/TE-substantial)) 4
+                           (>= (nth probabilities 3) (- 1 racketlon-constants/TE-major)) 3
+                           (>= (nth probabilities 3) (- 1 racketlon-constants/TE-minor)) 2
+                           (>= (nth probabilities 3) (- 1 racketlon-constants/TE-marginal)) 1
+                           (= (nth probabilities 3) 0.5) 0
+                           (< (nth probabilities 3) racketlon-constants/TE-marginal) -1
+                           (< (nth probabilities 3) racketlon-constants/TE-minor) -2
+                           (< (nth probabilities 3) racketlon-constants/TE-major) -3
+                           (< (nth probabilities 3) racketlon-constants/TE-substantial) -4
+                           :else :unknown)]
+
+    [transform-first transform-second transform-third transform-fourth]))
+
 (defn calculate-player1-win-percentages
   ; calculate win percentages for player 1 when playing against player 2
   [player1-profile player2-profile]
@@ -205,4 +266,17 @@
 
 (calculate-median-score markus-TT markus-BA markus-SQ markus-TE)
 
-(println (nth racketlon-constants/all_combinations 432))
+(defn vector-of-four [integers]
+  (vector (first integers) (second integers) (nth integers 2) (nth integers 3)))
+
+(defn -main
+  ; entry point for the program
+  [& args]
+  (if (not= (count args) 4)
+    (println "Provide four integers as arguments")
+    (let [integers (map #(Integer/parseInt %) args)
+          vector-result (vector-of-four integers)]
+      (println "You provided four integers:" vector-result)
+      (find-best-worst-opponent-profile vector-result))))
+
+(-main "1" "2" "2" "1")
