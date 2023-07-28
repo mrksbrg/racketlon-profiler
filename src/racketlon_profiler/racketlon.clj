@@ -100,7 +100,7 @@
     (println "You are playing like this:" ratings "with a total strength of" total-strength)
 
      ; find all possible opponent profiles 
-    (let [possible-opponents (combinations-summing-to-n total-strength)]
+    (let [possible-opponents (profiles-summing-to-n total-strength)]
       (println "Number of player profiles matching your strength:" (count possible-opponents))
       ; calculate win rally percentages against them  
       (let [percentages (map #(calculate-player1-win-percentages ratings %) possible-opponents)]
@@ -120,7 +120,7 @@
             (doseq [entry (take 5 sorted-median-scores)]
               (println "Score:" (:median-score entry) "Profile:" (:opponent-profile entry)))))))))
 
-(find-best-worst-opponent-profile [2 4 5 1])
+(find-best-worst-opponent-profile [4 3 3 1])
 
 (defn calculate-median-score
   ; simulate 100 matches and return the median score
@@ -246,6 +246,8 @@
                            :else :unknown)]
 
     [transform-first transform-second transform-third transform-fourth]))
+
+(convert-probabilities-to-diff [0.5 0.17 0.8 0.73])
 
 (defn calculate-player1-win-percentages
   ; calculate win percentages for player 1 when playing against player 2
