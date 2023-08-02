@@ -123,11 +123,11 @@
                 (println "Score:" (:median-score entry) "Profile:" opponent-profile)))))))))
 
 (defn calculate-median-score
-  ; simulate 100 matches and return the median score
+  ; simulate 1000 matches and return the median score
   [probabilities]
   (println "calculate-median-score:" probabilities)
-  ; call simulate-match nbr-matches times and sum up the differences
-  (let [nbr-matches 100
+  ; call simulate-match 1000 times and sum up the differences
+  (let [nbr-matches 1000
         differences (vec (repeatedly nbr-matches
                                      #(simulate-match probabilities)))]
     ; sort the differences and return the median
